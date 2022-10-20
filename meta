@@ -1,0 +1,23 @@
+<title>{titleName}</title>
+<meta name="description" content="{desc}">
+<meta name="keywords" content="{keywordList}">
+
+home
+<Head titleName={'Stay at Banff Log Cabin Guesthouse'} desc={'Located in the heart of the Canadian Rocky Mountains, we invite you to visit our Banff Log Cabin Guesthouse. Enjoy a romantic and unique Log Cabin experience!'} keywordList={'log cabin, hotel, guesthouse, Banff, Rocky Mountains, world-class'}  />
+
+our cabin
+<Head titleName={'Banff Log Cabin'} desc={'Our cozy cabin is a Banff landmark, decorated with features like a hand crafted chandelier and a beautiful black iron Queen-sized bed with fluffy pillows and comfy duvet.'} keywordList={'log cabin, hotel, guesthouse, Banff, cozy, world-class'}  />
+
+about us
+<Head titleName={'About Banff Log Cabin'} desc={'The Banff Log Cabin, owned and operated by long term Banff residents Malcolm & Sharon Carmichael, is a true Alberta gem. Its history begins in 1974...'} keywordList={'log cabin, Alberta history, guesthouse, Banff, Rocky Mountains, world-class'}  />
+
+rates
+<Head titleName={'Banff Log Cabin Rates'} desc={'Stay at  luxurious Banff Log Cabin guesthouse with a scenic view of the Rocky Mountains.'} keywordList={'log cabin, hotel, guesthouse, Banff, Rocky Mountains, luxury'} />
+
+contact
+<Head titleName={'Contact Banff Log Cabin'} desc={'If you have  questions about your stay at Banff Log Cabin, please don't hesitate to reach out.'} keywordList={'log cabin, Malcolm Carmichael, Sharon Carmichael, guesthouse, Rocky Mountains, world-class'}  />
+
+book now
+<Head titleName={'Book Now-- Banff Log Cabin'} desc={'Book a stay at a world-class Log Cabin guesthouse located in Banff, Alberta!'} keywordList={'log cabin, hotel, visit Banff, Banff, Rocky Mountains, world-class'} />
+
+<Head titleName={''} desc={''} keywordList={''} />
