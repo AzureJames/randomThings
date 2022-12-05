@@ -18,6 +18,22 @@ apply validation and add and update in database use em
 
 USE BOOTSTRAP IN THE STYLES?
 
+{struct
+
+VIEWS>
+  ERRORS
+  DOGS
+     overview.php
+     success.php
+     view.php
+     write.php
+     edit.php
+  PAGES
+    about.php
+    home.php
+  TEMPLATES
+}
+
 ///////////////////////////////////
 https://mdbootstrap.com/docs/standard/navigation/navbar/
 NAV:
@@ -74,13 +90,13 @@ Title
 $autoload['libraries'] = array('session','database','ion_auth')
 ///////////////////////////////////////////
 
-DATABASE.PHP: PUT THIS STUFF IN THE SQL OF PHPMYADMIN MAYBE, REAL ASSIGN IS DOGS THO..
+DATABASE.PHP: PUT THIS STUFF IN THE SQL OF PHPMYADMIN MAYBE, REAL ASSIGN IS DOGS THO.. so copy paste from datatables sql i guess,,,
 
 CREATE TABLE news (
     id INT UNSIGNED NOT NULL AUTO_INCREMENT,
     title VARCHAR(128) NOT NULL,
     slug VARCHAR(128) NOT NULL,
-    body TEXT NOT NULL,
+    desc..... TEXT NOT NULL,
     PRIMARY KEY (id),
     KEY slug (slug)
 );
@@ -103,6 +119,7 @@ use CodeIgniter\Model;
 class DogsModel extends Model
 {
     protected $table = 'dogs';
+    protected $allowedFields = ['title', 'slug', 'description']; // THIS ALLOWS DATA SAVING
 
     public function getDogs($slug = false) {
         if ($slug === false) {
@@ -122,7 +139,7 @@ class DogsModel extends Model
 
 ////////////////////////////////////////////////////////////
 
-controllers>Dogs.php
+controllers>Dogs.php         THE ONE WAY BELOW THIS MIGHT BE BETTER OR THIS MIGHT BE THE START OF THAT
 
 <?php
 
@@ -167,7 +184,7 @@ class Dogs extends BaseController
 views>news>overview.php
 
 <h2><?= esc($title) ?></h2>
-
+<a href="<?php echo base_url;?>/dogs/write" class="btn btn-info">Add</a>
 <?php if (! empty($dogs) && is_array($dogs)): ?> //if there is
     <?php foreach ($dogs as $dog): ?>
         <h3><?= esc($dog['title']) ?></h3>
@@ -187,17 +204,21 @@ views>news>overview.php
  
  public function view($slug = null)
 {
-        $model = model(NewsModel::class);
-        $data['dogs'] = $model->getNews($slug);
+        $model = model(DogsModel::class);
+        $data['dogs'] = $model->getDog($slug);
 
         if (empty($data['dogs'])) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Cannot find the dog: ' . $slug);
         }
+        
+        <a href="<?= base_url(); ?>/news/edit/<?= $news['id'] ?>">Edit</a>
+        <a href="<?= base_url(); ?>/news/delete/<?= $news['id'] ?>">Delete</a>   //NOT SUPER SURE AB THIS....
+
 
         $data['title'] = $data['dogs']['title'];
 
         return view('templates/header', $data)
-            . view('news/view')
+            . view('dogs/view')
             . view('templates/footer');
     }
 
@@ -205,11 +226,18 @@ views>news>overview.php
  
 Routes.php
 
+
+
+
 $routes->get('/', 'Home::index');
+$routes->match(['get', 'post'], 'dogs/write, 'Dogs::write');
+$routes->match(['get', 'post'], 'dogs/edit/(:num)', 'Dogs::edit/$1');
+$routes->get('dogs/delete/(:num)', 'Dogs::delete/$1');
 $routes->get('dogs/(:segment)', 'Dogs::view/$1'); //pass views anything after dogs/
 $routes->get('dogs', 'Dogs::index');
 $routes->get('pages', 'Pages::index');
 $routes->get('(:any)', 'Pages::view/$1');
+
 
 ////////////////////////////////////////////////////////////////////////////
 config>filters.php>line 60
@@ -236,14 +264,134 @@ app\views\dogs\write.php
     <label for="title">Title</label>
     <input type="input" name="title" /><br />
 
-    <label for="body">Text</label>
-    <textarea name="body" cols="45" rows="4"></textarea><br />
+    <label for="description">Text</label>
+    <textarea name="description" cols="45" rows="4"></textarea><br />
 
     <input type="submit" name="submit" value="Create dog page" />
 </form>
 
 
+////////////////////////////////////////////////////////////////////////////
+
+config>routes>line 18 might be add:
+
+$routes->match(['get', 'post'], 'dogs/write', 'dogs::write');
+////////////////////////////////////////////////////////////////////////////
+
+views>dogs>success.php  (i think.. Copy another view file to make sure)
+
+<h1>Success</h1>
+
+/////////////////////////////////////////////////////////////////////////////
+
+views\dogs\edit.php 
+
+<h2><?= esc($title) ?></h2>
+
+<?= session()->getFlashdata('error') ?>
+<?= service('validation')->listErrors() ?>
+
+<!-- <form action="save" method="post"> -->
+<?php echo form_open('news/edit/'.$id); ?>  //WE HAVE TO ADD THE FORM MULTIPART HERE!!!!! FIND THE C-I FUNC FOR IT...
+
+    <?= csrf_field() ?>
+    
+    <label for="title">Title</label>
+    <input type="input" name="title" value="<?= isset($title) ? $title : '' ?>"/><br />
+
+    <label for="description">Text</label>
+    <textarea name="description" cols="45" rows="4"><?= isset($description) ? $description : '' ?></textarea><br />
+
+    <input type="submit" name="submit" value="Update dog" />
+</form>  
+
+
+/////////////////////////////////////////////////////////////////////////////////
+
+controller>dogs
+
+public function write()
+{
+    $model = model(NewsModel::class);
+
+   if ($this->request->getMethod() === 'post' && $this->validate([
+      'title' => 'required|min_length[3]|max_length[255]',  //THIS IS WHERE THE VALIDATION IS!!
+      'description'  => 'required',
+   ])) {
+       $model->save([
+           'title' => $this->request->getPost('title'),
+           'slug'  => url_title($this->request->getPost('title'), '-', true),
+           'description'  => $this->request->getPost('description'),
+       ]);
+
+        return view('templates/header', ['title' => 'You have successfully created dog entry'])
+        . view('dogs/success')
+        . view('templates/footer');
+    }
+
+    return view('templates/header', ['title' => 'Create a dog page']) //IF NOTHING WRITTEN NOW
+        . view('dogs/write')
+        . view('templates/footer');
+}
+
+
+public function edit($id)
+{
+helper('form');
+      $this->crud_model = new NewsModel();
+
+      if (
+         $this->request->getMethod() === 'post' && $this->validate([
+         'title' => 'required|min_length[3]|max_length[255]',
+         'body' => 'required',
+            ])
+        ) {
+            $data = [
+                'id' => $id,
+                'title' => $this->request->getPost('title'),
+                'slug' => url_title($this->request->getPost('title'), '-', true),
+                'body' => $this->request->getPost('body')
+            ];
+
+            $this->crud_model->save($data);
+
+            // var_dump($data);
+
+            return view('templates/header', ['title' => 'Updated a news item successfully'])
+                . view('news/success-update')
+                . view('templates/footer');
+        } else {
+            // echo 'htello';
+            $data = $this->crud_model->getDetails($id);
+            // var_dump($data);
+            return view('templates/header', ['title' => 'Update a news item'])
+                . view('news/edit', $data)
+                . view('templates/footer');
+
+        }
+    }
+
+
+    public function delete($id)
+    {
+        $this->crud_model = new NewsModel();
+        $this->crud_model->delete($id);
+
+        $data['title'] = "Post deleted";
+        return view('templates/header', $data) .
+            view('news/success-delete') .
+            view('templates/footer');
+    }
 
 
 
+//////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////////////////////////////////////////////////////
 
